@@ -20,14 +20,14 @@ target_link_libraries(wave_player_cmake LINK_PRIVATE Threads::Threads)
 add_custom_command(TARGET wave_player_cmake POST_BUILD 
   COMMAND "${CMAKE_COMMAND}" -E copy 
      "$<TARGET_FILE:wave_player_cmake>"
-     "~/cmpt433/public/myApps/beatbox" 
+     "~/cmpt433/public/myApps/as4-finddot" 
   COMMENT "Copying ARM executable to public NFS directory")
 
 
 # ---------------- NEW! ----------------
 # Copy the WAV folder to NFS
-add_custom_command(TARGET wave_player_cmake POST_BUILD 
-  COMMAND "${CMAKE_COMMAND}" -E copy_directory
-     "${CMAKE_SOURCE_DIR}/wave-files"
-     "~/cmpt433/public/myApps/wave-files" 
-  COMMENT "Copying WAVE files to public NFS directory")
+# add_custom_command(TARGET wave_player_cmake POST_BUILD 
+#   COMMAND "${CMAKE_COMMAND}" -E copy_directory
+#      "${CMAKE_SOURCE_DIR}/wave-files"
+#      "~/cmpt433/public/myApps/wave-files" 
+#   COMMENT "Copying WAVE files to public NFS directory")

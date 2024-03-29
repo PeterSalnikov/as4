@@ -27,14 +27,24 @@ Much of the code comes from Dr Brian's I2C guide.
 #define Y_THRESH 100
 #define Z_THRESH 1800
 
+#define READING_MIN 0
+#define READING_MAX 4095
+
+#define MAPPED_COORD_MIN -1.5
+#define MAPPED_COORD_MAX 1.5
+
 // convert a 3-digit hex number to a short. This assumes
 // that the numbers are in the correct format
 void i2c_init();
 short i2c_toShort(unsigned char l, unsigned char h);
+
+double accelerometer_getXCoord();
+double accelerometer_getYCoord();
+
 // Thanks to Dr. Brian Fraser for providing i2c code
-int initI2cBus(char* bus, int address);
-void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char value);
-unsigned char readI2cReg(int i2cFileDesc, unsigned char regAddr);
+// int initI2cBus(char* bus, int address);
+// void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char value);
+// unsigned char readI2cReg(int i2cFileDesc, unsigned char regAddr);
 
 void i2c_cleanup();
 

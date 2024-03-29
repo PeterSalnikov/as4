@@ -28,41 +28,41 @@
 
 int main(void)
 {
-	Period_init();
+	// Period_init();
 	i2c_init();
-	joystick_init();
-	textDisplay_init();
-	AudioMixer_init();
-	beatMaker_init();
+	// joystick_init();
+	// textDisplay_init();
+	// AudioMixer_init();
+	// beatMaker_init();
 	udp_init();
 
-	beatLib_loadRockBeat();
+	// beatLib_loadRockBeat();
 
 	// Play Audio
 	while(udp_isInitialized()) {
 		// switch the beats based on BeatMode
-		switch(beatMaker_getBeatMode()) {
-			case OFF:
-				break;
-			case ROCK1:
-				beatMaker_playRock1();
-				break;
-			case ROCK2:
-				beatMaker_playRock2();
-				break;
-		}
+		// switch(beatMaker_getBeatMode()) {
+		// 	case OFF:
+		// 		break;
+		// 	case ROCK1:
+		// 		beatMaker_playRock1();
+		// 		break;
+		// 	case ROCK2:
+		// 		beatMaker_playRock2();
+		// 		break;
+		// }
 
-		float waitFor = (60.0 / (float) beatMaker_getTempo() / 2.0)*1000;
+		// float waitFor = (60.0 / (float) beatMaker_getTempo() / 2.0)*1000;
 
-		time_sleepForMs((int) waitFor);
+		// time_sleepForMs((int) waitFor);
 
 	}
 
 	// Some modules don't need cleanup
-	udp_cleanup();
-	i2c_cleanup();
-	AudioMixer_cleanup();
-	Period_cleanup();
+	// udp_cleanup();
+	// i2c_cleanup();
+	// AudioMixer_cleanup();
+	// Period_cleanup();
 
 	printf("Done!\n");
 	return 0;
