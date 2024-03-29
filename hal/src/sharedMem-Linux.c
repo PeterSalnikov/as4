@@ -4,9 +4,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include "sharedDataStruct.h"
+#include "hal/sharedDataStruct.h"
 
-#include "accelerometer.h"
+#include<pthread.h>
+#include "hal/accelerometer.h"
+#include "hal/sharedMem-Linux.h"
 
 /* 
 Configure target pins for PRU use (depending on your GPIO needs). Must be done each boot of
@@ -75,6 +77,7 @@ int mapCoordToInd(double coord)
     double width = 1.0 / (double)NUM_LEDS;
     return (int)((coord + 0.5) / width);
 }
+
 static int getAimY()
 {
     return mapCoordToInd(accelerometer_getYCoord());
@@ -92,15 +95,28 @@ static void freePruMmapAddr(volatile void* pPruBase);
 static uint32_t current_color = GREEN;
 
 volatile sharedMemStruct_t *pSharedPru0;
+// volatile sharedMemStruct_t *pSharedPru0;
 
-int main(void) 
+
+static pthread_t pid;
+void* sharedThread(void * args);
+
+// static volatile void *pPruBase;
+
+void shared_init()
 {
+    pthread_create(&pid,NULL,&sharedThread,NULL);
+}
+
+void *sharedThread(void* args) 
+{
+    volatile void *pPruBase = getPruMmapAddr();
+    pSharedPru0 = PRU0_MEM_FROM_BASE(pPruBase);
+    (void) args;
     i2c_init();
     printf("Sharing memory with PRU\n");
     
     // Get access to shared memory for my uses
-    volatile void *pPruBase = getPruMmapAddr();
-    pSharedPru0 = PRU0_MEM_FROM_BASE(pPruBase);
 
     int prevAimY = getAimY();
     int curAimY = getAimY();
@@ -109,6 +125,9 @@ int main(void)
     int consecutiveY = 0;
     // Drive it
     for (int i = 0; i < 200000; i++) {
+    // driveLED_all(0x00000000);
+	// printf("HELLO\n");
+
         // Drive LED
 
         // condition for checking aim;
@@ -117,40 +136,28 @@ int main(void)
         // directly at the target
         // if(prevAim != getAim()) {
         curAimY = getAimY();
-        if(curAimY == prevAimY) {
-            consecutiveY++;
-        }
-        else {
-            consecutiveY = 0;
-        }
-        if(consecutiveY > 75) {
-            driveLED_all(0x00000000);
-            driveLED(current_color);
-            consecutiveY = 0;
-        }
-        // if(curAim != prevAim) {
 
-        //     for(int i = 0; i < 2; i++) {
-        //         if(prevAim != getAim()) {
 
-        //             break;
-        //         }
-        //     }
-        // }
-        // }
         if(!pSharedPru0->isDownPressed) {
             printf("down is pressed\n");
-            driveLED_all(0x00000000);
+            driveLED_all(OFF);
 
         }
         else if(!pSharedPru0->isRightPressed) {
             printf("right is pressed\n");
         }
         else {
-            // for(int i = 0; i < NUM_LEDS; i++) {
-
-            //     pSharedPru0->colors[i] = 0x00000000;
-            // }
+            if(curAimY == prevAimY) {
+                consecutiveY++;
+            }
+            else {
+                consecutiveY = 0;
+            }
+            if(consecutiveY > 75) {
+                driveLED_all(OFF);
+                driveLED(current_color);
+                consecutiveY = 0;
+            }
         }
         printf("current index: %d\n",getAimY());
         // printf("LEDS: %8x\n",pSharedPru0->colors[0]);
@@ -159,10 +166,71 @@ int main(void)
         // sleep(0.001);
         
     }
-    driveLED_all(0x00000000);
     // Cleanup
     freePruMmapAddr(pPruBase);
 }
+
+// int main(void) 
+// {
+//     i2c_init();
+//     printf("Sharing memory with PRU\n");
+    
+//     // Get access to shared memory for my uses
+//     volatile void *pPruBase = getPruMmapAddr();
+//     pSharedPru0 = PRU0_MEM_FROM_BASE(pPruBase);
+
+//     int prevAimY = getAimY();
+//     int curAimY = getAimY();
+//     driveLED(current_color);
+//     bool hasChanged = false;
+//     int consecutiveY = 0;
+//     // Drive it
+//     for (int i = 0; i < 200000; i++) {
+//         // Drive LED
+
+//         // condition for checking aim;
+//         // create an inner condition
+//         // for when the point is aiming
+//         // directly at the target
+//         // if(prevAim != getAim()) {
+//         curAimY = getAimY();
+//         if(curAimY == prevAimY) {
+//             consecutiveY++;
+//         }
+//         else {
+//             consecutiveY = 0;
+//         }
+//         if(consecutiveY > 75) {
+//             driveLED_all(OFF);
+//             driveLED(current_color);
+//             consecutiveY = 0;
+//         }
+
+//         if(!pSharedPru0->isDownPressed) {
+//             printf("down is pressed\n");
+//             driveLED_all(OFF);
+
+//         }
+//         else if(!pSharedPru0->isRightPressed) {
+//             printf("right is pressed\n");
+//         }
+//         else {
+//             // for(int i = 0; i < NUM_LEDS; i++) {
+
+//             //     pSharedPru0->colors[i] = 0x00000000;
+//             // }
+//         }
+//         printf("current index: %d\n",getAimY());
+//         // printf("LEDS: %8x\n",pSharedPru0->colors[0]);
+//         // Timing
+//         prevAimY = curAimY;
+//         // sleep(0.001);
+        
+//     }
+//     driveLED_all(0x00000000);
+//     // Cleanup
+//     freePruMmapAddr(pPruBase);
+// }
 
 static void driveLED(uint32_t color)
 {

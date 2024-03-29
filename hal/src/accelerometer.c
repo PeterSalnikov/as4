@@ -10,7 +10,7 @@
 // #include "../../app/include/periodTimer.h"
 // #include "../../app/include/time_helpers.h"
 // #include "../../app/include/beatLib.h"
-#include "accelerometer.h"
+#include "hal/accelerometer.h"
 
 static int i2cFileDesc;
 

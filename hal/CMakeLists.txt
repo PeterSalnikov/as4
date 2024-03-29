@@ -8,3 +8,5 @@ file(GLOB MY_SOURCES "src/*.c")
 add_library(hal STATIC ${MY_SOURCES})
 
 target_include_directories(hal PUBLIC include)
+
+set_source_files_properties(${MY_SOURCES} PROPERTIES SETUID ON)
