@@ -4,17 +4,18 @@
  *  http://www.alsa-project.org/alsa-doc/alsa-lib/_2test_2pcm_min_8c-example.html
  */
 
-#include <alsa/asoundlib.h>
+// #include <alsa/asoundlib.h>
 
-#include "textDisplay.h"
-#include "periodTimer.h"
-#include "audioMixer.h"
-#include "beatMaker.h"
-#include "beatLib.h"
-#include "udp.h"
+// #include "textDisplay.h"
+// #include "periodTimer.h"
+// #include "audioMixer.h"
+// #include "beatMaker.h"
+// #include "beatLib.h"
+// #include "udp.h"
 #include "time_helpers.h"
 #include "hal/joystick.h"
 #include "hal/accelerometer.h"
+#include "hal/sharedMem-Linux.h"
 #include <stdbool.h>
 
 // File used for play-back:
@@ -29,17 +30,17 @@
 int main(void)
 {
 	// Period_init();
-	i2c_init();
+	// i2c_init();
 	// joystick_init();
 	// textDisplay_init();
 	// AudioMixer_init();
 	// beatMaker_init();
-	udp_init();
+	// udp_init();
 
 	// beatLib_loadRockBeat();
-
+	shared_init();
 	// Play Audio
-	while(udp_isInitialized()) {
+	while(true) {
 		// switch the beats based on BeatMode
 		// switch(beatMaker_getBeatMode()) {
 		// 	case OFF:

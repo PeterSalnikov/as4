@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <pru_cfg.h>
 #include "resource_table_empty.h"
-#include "../linux/sharedDataStruct.h"
+// #include "hal/sharedDataStruct.h"
+// #include "hal/include/hal/sharedDataStruct.h"
 
 #define STR_LEN         8       // # LEDs in our string
 #define oneCyclesOn     700/5   // Stay on 700ns
@@ -26,6 +27,21 @@ volatile register uint32_t __R31;
 #define JOYSTICK_RIGHT_MASK (1 << 15)
 #define JOYSTICK_DOWN_MASK (1 << 14)
 
+#include<stdbool.h>
+
+#define NUM_LEDS 8
+
+// **IMPORTANT
+/* 
+Defeating the purpose of sharedDataStruct at the moment. But 
+it's the only way I can think of to have the Linux portion of
+the PRU loop to be runnable.
+ */
+typedef struct {
+    uint32_t colors[NUM_LEDS];
+    bool isDownPressed;
+    bool isRightPressed;
+} sharedMemStruct_t;
 
 
 volatile sharedMemStruct_t *pSharedMemStruct =
