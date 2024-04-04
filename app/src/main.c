@@ -1,59 +1,85 @@
-// #include <alsa/asoundlib.h>
 
 // #include "textDisplay.h"
-// #include "periodTimer.h"
-// #include "audioMixer.h"
-// #include "beatMaker.h"
-// #include "beatLib.h"
 // #include "udp.h"
 #include "hal/display.h"
 #include "time_helpers.h"
-#include "hal/joystick.h"
+#include "hal/pwm.h"
 #include "hal/accelerometer.h"
 #include "hal/sharedMem-Linux.h"
 #include <stdbool.h>
 #include <stdio.h>
 
-// File used for play-back:
-// If cross-compiling, must have this file available, via this relative path,
-// on the target when the application is run. This example's Makefile copies the wave-files/
-// folder along with the executable to ensure both are present.
-
-// #define SAMPLE_RATE   44100
-// #define NUM_CHANNELS  1
-// #define SAMPLE_SIZE   (sizeof(short)) 	// bytes per sample
 
 int main(void)
 {
-	// Period_init();
 	display_init();
-	// joystick_init();
-	
 	shared_init();
-	time_sleepForMs(300);
+	pwm_init();
 
-	double randomY;
+	time_sleepForMs(300);
 
 	// Generate random points
 	while(!shared_isRightPressed()) {
-		// printf("\n");
-		// randomY = generateCoord();
+
+		pwm_turnOn();
+		// missed sound
+		// for(int c = 0; c < 4; c++) {
+		// 	for(int i = 5000; i > 100; i/= 2) {
+		// 		pwm_setFrequency(i- c*75);
+		// 		printf("%d\n",i);
+		// 		time_sleepForMs(50);
+		// 	}
+		// }
+		for(int i = 7040; i > 55; i -= 440) {
+			pwm_setFrequency(i);
+			time_sleepForMs(25);
+		}
+		pwm_turnOff();
+		time_sleepForMs(200);
+		// hit sound
+		for(int c = 0; c < 8; c++) {
+			for(int i = 1; i < 4186; i *= 2) {
+				pwm_setFrequency(i);
+				time_sleepForMs(10);
+			}
+		}
+
+
+
+		// for(int i = 1; i < 4978; i *= 2) {
+		// 	pwm_setFrequency(i);
+		// 	time_sleepForMs(25);
+		// }
+		// for(int i = 1; i < 4699; i *= 2) {
+		// 	pwm_setFrequency(i);
+		// 	time_sleepForMs(25);
+		// }
+		// // time_sleepForMs(300);
+		// // pwm_setFrequency(4699);
+		// time_sleepForMs(300);
+		// pwm_setFrequency(4434);
+		// time_sleepForMs(300);
+		// pwm_setFrequency(4186);
+		// time_sleepForMs(300);
+		pwm_turnOff();
+		// pwm_setFrequency(4186);
+		// pwm_turnOn();
 
 		// time_sleepForMs(1000);
-		// printf("%0.2f\n",randomY);
+		// pwm_setFrequency(4435);
+		// pwm_turnOn();
 
+		time_sleepForMs(1000);
 
-		// time_sleepForMs((int) waitFor);
-
+		pwm_turnOff();
 	}
 
 	// Some modules don't need cleanup
-	// udp_cleanup();
 	// i2c_cleanup();
 	// AudioMixer_cleanup();
 	// Period_cleanup();
 	display_cleanup();
-
+	pwm_cleanup();
 	printf("Done!\n");
 	return 0;
 }
