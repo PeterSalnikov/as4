@@ -1,7 +1,5 @@
 #include "hal/joystick.h"
-#include "../../app/include/audioMixer.h"
 #include "../../app/include/time_helpers.h"
-#include "../../app/include/beatMaker.h"
 #include <pthread.h>
 
 // Everything surrounding joystick functionality and I/O
@@ -158,45 +156,45 @@ enum Direction joystick_getCurrentDirection()
     return NONE;
 }
 
-static void setVolOrTempoOrMode()
-{
-        if(joystick_getCurrentDirection() == UP) {
-            AudioMixer_setVolume(AudioMixer_getVolume() + 5);
-        }
-        if(joystick_getCurrentDirection() == DOWN) {
-            AudioMixer_setVolume(AudioMixer_getVolume() - 5);
-        }
-        if(joystick_getCurrentDirection() == LEFT) {
-            beatMaker_setTempo(beatMaker_getTempo() - 5);
-        }
-        if(joystick_getCurrentDirection() == RIGHT) {
-            beatMaker_setTempo(beatMaker_getTempo() + 5);
-        }
-        if(joystick_getCurrentDirection() == IN) {
-            beatMaker_incBeatMode();
-        }
-}
+// static void setVolOrTempoOrMode()
+// {
+//         if(joystick_getCurrentDirection() == UP) {
+//             AudioMixer_setVolume(AudioMixer_getVolume() + 5);
+//         }
+//         if(joystick_getCurrentDirection() == DOWN) {
+//             AudioMixer_setVolume(AudioMixer_getVolume() - 5);
+//         }
+//         if(joystick_getCurrentDirection() == LEFT) {
+//             beatMaker_setTempo(beatMaker_getTempo() - 5);
+//         }
+//         if(joystick_getCurrentDirection() == RIGHT) {
+//             beatMaker_setTempo(beatMaker_getTempo() + 5);
+//         }
+//         if(joystick_getCurrentDirection() == IN) {
+//             beatMaker_incBeatMode();
+//         }
+// }
 
-void *joystickThread(void *args)
-{
-    (void) args;
+// void *joystickThread(void *args)
+// {
+//     (void) args;
 
-    while(!stopping) {
+//     while(!stopping) {
 
-        setVolOrTempoOrMode();
+//         setVolOrTempoOrMode();
 
-        long long timeSincePressed = time_getTimeInMs();
+//         long long timeSincePressed = time_getTimeInMs();
 
-        while(joystick_isPressed() && time_getTimeInMs() - timeSincePressed < 750) {}
+//         while(joystick_isPressed() && time_getTimeInMs() - timeSincePressed < 750) {}
 
-        while(joystick_isPressed()) {
+//         while(joystick_isPressed()) {
 
-            setVolOrTempoOrMode();
+//             setVolOrTempoOrMode();
 
-            time_sleepForMs(250);
+//             time_sleepForMs(250);
 
-        }
+//         }
 
-    }
+//     }
 
-}
+// }

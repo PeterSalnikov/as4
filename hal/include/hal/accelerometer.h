@@ -9,7 +9,7 @@ Much of the code comes from Dr Brian's I2C guide.
 #define I2CDRV_LINUX_BUS1 "/dev/i2c-1"
 #define I2CDRV_LINUX_BUS2 "/dev/i2c-2"
 
-#define I2C_DEVICE_ADDRESS 0x18
+#define I2C_DEVICE_ADDRESS_ACCEL 0x18
 
 #define WHO_AM_I 0x0F
 #define CTRL_REG1 0x20
@@ -35,7 +35,7 @@ Much of the code comes from Dr Brian's I2C guide.
 
 // convert a 3-digit hex number to a short. This assumes
 // that the numbers are in the correct format
-void i2c_init();
+void accelerometer_init();
 short i2c_toShort(unsigned char l, unsigned char h);
 
 double accelerometer_getXCoord();

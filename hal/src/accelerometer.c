@@ -47,12 +47,12 @@ short i2c_toShort(unsigned char l, unsigned char h)
 	return (h << 4) | (l >> 4);
 }
 
-void i2c_init()
+void accelerometer_init()
 {
 	system("config-pin p9_17 i2c > /dev/null");
 	system("config-pin p9_18 i2c > /dev/null");
 
-	i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, I2C_DEVICE_ADDRESS);
+	i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, I2C_DEVICE_ADDRESS_ACCEL);
 	writeI2cReg(i2cFileDesc, CTRL_REG1, 0x27);
 
 	pthread_create(&pid,NULL,accelerometerThread,NULL);
