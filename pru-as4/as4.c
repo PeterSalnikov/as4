@@ -2,6 +2,7 @@
 // necessary to get NeoPixel 8-LED strip to work with PRU.
 #include <stdint.h>
 #include <pru_cfg.h>
+#include<stdbool.h>
 #include "resource_table_empty.h"
 #include "sharedDataStruct.h"
 // #include "hal/include/hal/sharedDataStruct.h"
@@ -27,7 +28,6 @@ volatile register uint32_t __R31;
 #define JOYSTICK_RIGHT_MASK (1 << 15)
 #define JOYSTICK_DOWN_MASK (1 << 14)
 
-#include<stdbool.h>
 
 volatile sharedMemStruct_t *pSharedMemStruct =
     (volatile void *)THIS_PRU_DRAM_USABLE;

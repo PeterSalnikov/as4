@@ -21,6 +21,8 @@ int main(void)
 	
 	shared_init();
 
+	printf("Ready to find the dot.\n");
+
 	shared_cleanup();
 	pwm_cleanup();
 
