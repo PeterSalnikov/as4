@@ -34,8 +34,8 @@ add_custom_command(TARGET as4_finddot POST_BUILD
 #   COMMENT "Copying WAVE files to public NFS directory")
 # ---------------- NEW! ----------------
 # Copy the PRU folder to NFS. Code adapted from wave_files copy-over from as3
-add_custom_command(TARGET as4_finddot POST_BUILD 
-  COMMAND "${CMAKE_COMMAND}" -E copy_directory
-     "${CMAKE_SOURCE_DIR}/hal/pru"
-     "~/cmpt433/public/myApps/as4-pru" 
-  COMMENT "Copying PRU files to public NFS directory")
+# add_custom_command(TARGET as4_finddot POST_BUILD 
+#   COMMAND "${CMAKE_COMMAND}" -E copy_directory
+#      "${CMAKE_SOURCE_DIR}/hal/pru"
+#      "~/cmpt433/public/myApps/as4-pru" 
+#   COMMENT "Copying PRU files to public NFS directory")

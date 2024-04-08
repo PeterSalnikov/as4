@@ -9,6 +9,7 @@ Much of the code comes from Dr Brian's I2C guide.
 #define I2CDRV_LINUX_BUS1 "/dev/i2c-1"
 #define I2CDRV_LINUX_BUS2 "/dev/i2c-2"
 
+// Accelerometer register values
 #define I2C_DEVICE_ADDRESS_ACCEL 0x18
 
 #define WHO_AM_I 0x0F
@@ -23,29 +24,32 @@ Much of the code comes from Dr Brian's I2C guide.
 #define OUT_Z_L 0x2C
 #define OUT_Z_H 0x2D
 
-#define X_THRESH 4000
-#define Y_THRESH 100
-#define Z_THRESH 1800
+// Not needed for as4.
+// #define X_THRESH 4000
+// #define Y_THRESH 100
+// #define Z_THRESH 1800
 
 #define READING_MIN 0
 #define READING_MAX 4095
 
-#define MAPPED_COORD_MIN -1.5
-#define MAPPED_COORD_MAX 1.5
+#define MAPPED_COORD_MIN -2.0
+#define MAPPED_COORD_MAX 2.0
 
+void accelerometer_init();
+void accelerometer_cleanup();
 // convert a 3-digit hex number to a short. This assumes
 // that the numbers are in the correct format
-void accelerometer_init();
 short i2c_toShort(unsigned char l, unsigned char h);
-
+// Retrieve a coordinate converted to a value in [-1.0,1.0]
+// where +/-1.0 is the board 'vertically tilted' in either direction.
 double accelerometer_getXCoord();
 double accelerometer_getYCoord();
 
 // Thanks to Dr. Brian Fraser for providing i2c code
+// I have made these functions static
 // int initI2cBus(char* bus, int address);
 // void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char value);
 // unsigned char readI2cReg(int i2cFileDesc, unsigned char regAddr);
 
-void i2c_cleanup();
 
 #endif

@@ -4,16 +4,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-#include "hal/sharedDataStruct.h"
-
 #include<pthread.h>
+#include "../../app/include/time_helpers.h"
+#include "../../pru-as4/sharedDataStruct.h"
 #include "hal/accelerometer.h"
 #include "hal/sharedMem-Linux.h"
 
 /* 
 Configure target pins for PRU use (depending on your GPIO needs). Must be done each boot of
 the BBG.
-
+// System calls just here for reference; they are called during initialization.
 #joystick right and down, respectively
 config-pin p8_15 pruin
 config-pin p8_16 pruin
@@ -47,6 +47,24 @@ config-pin P8.11 pruout
 #define GREEN_BRIGHT 0xff000000
 #define BLUE_BRIGHT 0x0000ff00
 
+
+static uint32_t current_color = GREEN;
+
+volatile sharedMemStruct_t *pSharedPru0;
+
+static bool is_initialized = false;
+
+static double curPtY;
+static double curPtX;
+
+static pthread_t tid;
+
+static int score = 0;
+
+static enum State state = AIMING;
+
+// Simple function hard-coded to drive an LED based on the aim index.
+// If I wanted to do animations I would just have to add an index argument.
 static void driveLED(uint32_t color);
 
 static void driveLED_all(uint32_t color);
@@ -58,24 +76,34 @@ static void freePruMmapAddr(volatile void* pPruBase);
 
 static void* sharedThread(void * args);
 
-static uint32_t current_color = GREEN;
+void shared_init()
+{
+    is_initialized = true;
 
-volatile sharedMemStruct_t *pSharedPru0;
+    system("config-pin p8_15 pruin > /dev/null");
+	system("config-pin p8_16 pruin > /dev/null");
+	system("config-pin p8.11 pruout > /dev/null");
+    
+    pthread_create(&tid,NULL,&sharedThread,NULL);
+}
 
-static bool is_initialized = false;
-
-static double curPtY;
-static double curPtX;
-
-static pthread_t pid;
-
-static int score = 0;
+void shared_cleanup()
+{
+    pthread_join(tid,NULL);
+    is_initialized = false;
+}
 
 int shared_getScore()
 {
     return score;
 }
 
+enum State shared_getState()
+{
+    return state;
+}
+
+// ChatGPT RNG
 double generateCoord() {
     // Seed the random number generator
     srand(time(NULL));
@@ -90,13 +118,6 @@ double generateCoord() {
     return rand_double - 0.5;
 }
 
-void shared_init()
-{
-    is_initialized = true;
-    // pSharedPru0->isDownPressed = false;
-    // pSharedPru0->isRightPressed = false;
-    pthread_create(&pid,NULL,&sharedThread,NULL);
-}
 
 bool shared_isDownPressed()
 {
@@ -115,7 +136,7 @@ bool shared_isRightPressed()
     }
     return !pSharedPru0->isRightPressed;
 }
-
+// I think I also asked ChatGPT for this.
 int mapCoordToInd(double coord)
 {
     if(coord > MAPPED_COORD_MAX || coord < MAPPED_COORD_MIN) {
@@ -124,7 +145,6 @@ int mapCoordToInd(double coord)
     double width = 1.0 / (double)NUM_LEDS;
     return (int)((coord + 0.5) / width);
 }
-
 
 static double getAimY()
 {
@@ -138,14 +158,11 @@ static double getAimX()
 
 static void *sharedThread(void* args) 
 {
+    // Get access to shared memory
     volatile void *pPruBase = getPruMmapAddr();
     pSharedPru0 = PRU0_MEM_FROM_BASE(pPruBase);
     (void) args;
-    accelerometer_init();
-    printf("Sharing memory with PRU\n");
     
-    // Get access to shared memory for my uses
-
     double prevAimY = getAimY();
     double curAimY = prevAimY;
     bool yOnTarget = false;
@@ -155,8 +172,7 @@ static void *sharedThread(void* args)
     double curAimX = prevAimX;
     bool xOnTarget = false;
     curPtX = generateCoord();
-    // driveLED(current_color);
-    // bool hasChanged = false;
+    
     int consecutiveX = 0;
     int consecutiveY = 0;
     // Drive it
@@ -165,76 +181,95 @@ static void *sharedThread(void* args)
         curAimY = getAimY() - curPtY;
         curAimX = getAimX() - curPtX;
 
+        state = AIMING;
 
         if(shared_isDownPressed()) {
+
             if(xOnTarget && yOnTarget) {
-                curPtY = generateCoord();
-                driveLED_all(OFF);
-                printf("booyah\n");
+
                 score++;
-                sleep(1);
-                curPtX = generateCoord();
-                xOnTarget = false;
-                yOnTarget = false;
+                printf("That's a hit! Your current score is %d\n",score);
+                state = HIT;
             }
 
-        }
-        else if(shared_isRightPressed()) {
+            else {
+                printf("You missed!\n");
+                state = MISS;
+            }
+
+            xOnTarget = false;
+            yOnTarget = false;
             driveLED_all(OFF);
-            // is_initialized = false;
+
+// X,Y generation must be separated by a short sleep since they generate based on time
+// as of 04/05/2024. The sleep is also for accuracy in hit/miss readings
+
+            curPtX = generateCoord();
+
+            time_sleepForMs(100);
+            // sleep(1);
+
+            curPtY = generateCoord();
+
+            printf("Fire again!\n");
+
+        }
+
+        if(shared_isRightPressed()) {
+            driveLED_all(OFF);
+            break;
+        }
+
+        // Logic for changing the color of the LED, and which are lit up.
+        // Debouncing is achieved using N samples past threshold, only
+        // after which the LED will change state.
+
+        if((curAimX - prevAimX) < DELTA) {
+            consecutiveX++;
         }
         else {
-            if((curAimX - prevAimX) < 0.03) {
-                consecutiveX++;
-            }
-            else {
-                consecutiveX = 0;
-            }
-            if(consecutiveX > 150) {
-                // if the point is to the right
-                if(curAimX > 0.05) {
-                    current_color = GREEN;
-                    xOnTarget = false;
-                }
-                // if the point is to the left
-                else if(curAimX < -0.05) {
-                    current_color = RED;
-                    xOnTarget = false;
-                }
-                else {
-                    current_color = BLUE;
-                    xOnTarget = true;
-                }
-                consecutiveX = 0;
-            }
-
-            if((curAimY - prevAimY) < 0.03) {
-                consecutiveY++;
-            }
-            else {
-                consecutiveY = 0;
-            }
-            if(consecutiveY > 150) {
-                driveLED_all(OFF);
-
-                if(curAimY < 0.03 && curAimY > -0.03) {
-                    yOnTarget = true;
-                    driveLED_all(current_color);
-                }
-                else {
-                    driveLED(current_color);
-                    yOnTarget = false;
-                }
-                consecutiveY = 0;
-            }
-
+            consecutiveX = 0;
         }
-        // printf("current index: %d\n",getAimY());
-        // printf("LEDS: %8x\n",pSharedPru0->colors[0]);
-        // Timing
+        if(consecutiveX > SAMPLE_THRESH) {
+            // if the point is to the right
+            if(curAimX > DELTA) {
+                current_color = GREEN;
+                xOnTarget = false;
+            }
+            // if the point is to the left
+            else if(curAimX < -1*DELTA) {
+                current_color = RED;
+                xOnTarget = false;
+            }
+            else {
+                current_color = BLUE;
+                xOnTarget = true;
+            }
+            consecutiveX = 0;
+        }
+
+        if((curAimY - prevAimY) < DELTA) {
+            consecutiveY++;
+        }
+        else {
+            consecutiveY = 0;
+        }
+        if(consecutiveY > SAMPLE_THRESH) {
+            driveLED_all(OFF);
+
+            if(curAimY < DELTA && curAimY > -1 * DELTA) {
+                yOnTarget = true;
+                driveLED_all(current_color);
+            }
+            else {
+                driveLED(current_color);
+                yOnTarget = false;
+            }
+            consecutiveY = 0;
+        }
+
         prevAimX = curAimX;
         prevAimY = curAimY;
-        // sleep(0.001);
         
     }
     // Cleanup

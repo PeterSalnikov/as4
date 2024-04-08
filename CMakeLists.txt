@@ -15,4 +15,4 @@ add_compile_options(-fdiagnostics-color)
 # What folders to build
 add_subdirectory(hal)  
 add_subdirectory(app)
-
+add_subdirectory(pru-as4)

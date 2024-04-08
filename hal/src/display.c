@@ -1,3 +1,14 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdbool.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<sys/ioctl.h>
+#include<linux/i2c.h>
+#include<linux/i2c-dev.h>
+#include<pthread.h>
+#include<string.h>
+
 #include "hal/display.h"
 #include "hal/sharedMem-Linux.h"
 #include "../../app/include/time_helpers.h"
@@ -10,8 +21,11 @@ static bool is_initialized = false;
 static int i2cFileDesc;
 
 // "Dictionary" of digits, placed in numerical order for fast access
-static const unsigned char a[NUM_SYMBOLS] = {209,192,152,216,200,88,88,2,216,200};
-static const unsigned char b[NUM_SYMBOLS] = {165,4,131,1,34,35,163,5,163,35};
+// static const unsigned char a[NUM_SYMBOLS] = {209,192,152,216,200,88,88,2,216,200};
+// static const unsigned char b[NUM_SYMBOLS] = {165,4,131,1,34,35,163,5,163,35};
+// For upside down use (as4)
+static const unsigned char a[NUM_SYMBOLS] = {209,1,152,16,72,88,216,17,216,88};
+static const unsigned char b[NUM_SYMBOLS] = {165,160,195,163,162,35,35,8,163,162};
 
 static void *display_aNumber(void *args);
 static void writeI2cReg(unsigned char regAddr, unsigned char value);
@@ -26,6 +40,9 @@ void display_init()
     (void) system("config-pin p9.18 i2c > /dev/null");
     (void) system("echo out > /sys/class/gpio/gpio44/direction");
     (void) system("echo out > /sys/class/gpio/gpio61/direction");
+
+    (void) system("echo 1 > /sys/class/gpio/gpio44/value");
+    (void) system("echo 1 > /sys/class/gpio/gpio61/value");
     
     // Brian's code
     i2cFileDesc = open(I2CDRV_LINUX_BUS1,O_RDWR);
@@ -88,7 +105,7 @@ static void *display_aNumber(void *args)
     while(is_initialized) {
 
         // run once a second to update val
-        if(time_getTimeInMs() - stopwatch > 1000) {
+        if(time_getTimeInMs() - stopwatch > 200) {
 
             stopwatch = time_getTimeInMs();
             // val = sampler_getDipHistory();

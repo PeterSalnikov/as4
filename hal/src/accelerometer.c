@@ -7,14 +7,12 @@
 #include <linux/i2c-dev.h>
 #include <pthread.h>
 #include <stdbool.h>
-// #include "../../app/include/periodTimer.h"
-// #include "../../app/include/time_helpers.h"
-// #include "../../app/include/beatLib.h"
 #include "hal/accelerometer.h"
+#include "../../app/include/time_helpers.h"
 
 static int i2cFileDesc;
 
-static pthread_t pid;
+static pthread_t tid;
 
 static bool stopping = false;
 
@@ -55,12 +53,13 @@ void accelerometer_init()
 	i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, I2C_DEVICE_ADDRESS_ACCEL);
 	writeI2cReg(i2cFileDesc, CTRL_REG1, 0x27);
 
-	pthread_create(&pid,NULL,accelerometerThread,NULL);
+	pthread_create(&tid,NULL,accelerometerThread,NULL);
 }
 
-void i2c_cleanup()
+void accelerometer_cleanup()
 {
 	stopping = true;
+	pthread_join(tid,NULL);
 	close(i2cFileDesc);
 }
 
@@ -114,8 +113,8 @@ void *accelerometerThread(void *args)
 		// x: longitudinal (lean)
 		// y: lateral (tilt)
 
-		// time_sleepForMs(10);
-		sleep(0.01);
+		time_sleepForMs(10);
+		// sleep(10);
 
 	}
 	return NULL;
